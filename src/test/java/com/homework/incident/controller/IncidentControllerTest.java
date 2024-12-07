@@ -11,7 +11,10 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.WebRequest;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class IncidentControllerTest {
@@ -89,5 +92,29 @@ class IncidentControllerTest {
         verify(incidentService, times(1)).existsById(123);
         verify(incidentService, times(0)).createIncident(any());
     }
+    @Test
+    void testGetAllIncidents() {
+        IncidentService incidentService = new IncidentService();
+
+        for (int i = 1; i <= 20; i++) {
+            incidentService.addIncident(new Incident((long) i, "Incident " + i, "Description " + i, "Location " + i, i % 5, "OPEN"));
+        }
+
+        List<Incident> page1 = incidentService.getAllIncidents(null, null, 0, 5);
+        assertEquals(5, page1.size());
+        assertEquals("Incident 1", page1.get(0).getTitle());
+
+        List<Incident> page2 = incidentService.getAllIncidents(null, null, 5, 10);
+        assertEquals(5, page2.size());
+        assertEquals("Incident 6", page2.get(0).getTitle());
+
+        List<Incident> lastPage = incidentService.getAllIncidents(null, null, 15, 20);
+        assertEquals(5, lastPage.size());
+        assertEquals("Incident 16", lastPage.get(0).getTitle());
+
+        List<Incident> emptyPage = incidentService.getAllIncidents(null, null, 20, 25);
+        assertTrue(emptyPage.isEmpty());
+    }
+
 
 }

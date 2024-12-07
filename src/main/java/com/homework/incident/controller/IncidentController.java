@@ -131,24 +131,28 @@ public class IncidentController {
                     .body(new ErrorResponse("Bad Request", "Page number must be >= 1"));
         }
 
+        // 获取总记录数
+        int totalRecords = incidentService.getTotalRecords(status, severity);
+        if (totalRecords == 0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("Not Found", "No incidents found."));
+        }
+
         // 计算分页的起始和结束索引
         int fromIndex = (page - 1) * limit;
         int toIndex = page * limit;
 
+        // 确保 toIndex 不超过总记录数
+        if (toIndex > totalRecords) {
+            toIndex = totalRecords;
+        }
+
         logger.info("Paging: fromIndex={}, toIndex={}", fromIndex, toIndex);
 
         List<Incident> incidents = incidentService.getAllIncidents(status, severity, fromIndex, toIndex);
-        int totalRecords = incidentService.getTotalRecords(status, severity);
         int totalPages = (int) Math.ceil((double) totalRecords / limit);
 
         logger.info("Fetched {} incidents out of {} total records. Total pages: {}", incidents.size(), totalRecords, totalPages);
-
-        // 如果没有数据
-        if (incidents.isEmpty()) {
-            logger.warn("No incidents found for the given filters.");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Not Found", "No incidents found."));
-        }
 
         // 构建分页响应
         PaginationResponse paginationResponse = new PaginationResponse(page, totalPages, totalRecords);
@@ -157,5 +161,6 @@ public class IncidentController {
         logger.info("Returning paginated incidents response.");
         return ResponseEntity.ok(paginatedIncidents);
     }
+
 
 }

@@ -1,9 +1,13 @@
 package com.homework.incident.service;
+
 import org.springframework.stereotype.Service;
+
 import java.util.Map;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.Collections;
+
 import com.homework.incident.model.Incident;
 
 @Service
@@ -15,6 +19,18 @@ public class IncidentService {
         incidentStorage.put(incident.getAccidentId(), incident);
         return incident;
     }
+
+    public Incident findById(Long id) {
+        return incidentStorage.get(id);
+    }
+
+    public void addIncident(Incident incident) {
+        if (incident == null || incident.getAccidentId() == null || incident.getTitle() == null || incident.getTitle().isEmpty() || incident.getStatus() == null || incident.getStatus().isEmpty()) {
+            throw new IllegalArgumentException("Incident details are required and cannot be null or empty.");
+        }
+        incidentStorage.put(incident.getAccidentId(), incident);
+    }
+
 
     public boolean existsById(long accidentId) {
         return incidentStorage.containsKey(accidentId);
@@ -33,36 +49,38 @@ public class IncidentService {
             throw new IllegalArgumentException("Incident not found");
         }
 
-        existingIncident.setTitle(updatedIncident.getTitle());
-        existingIncident.setDescription(updatedIncident.getDescription());
-        existingIncident.setLocation(updatedIncident.getLocation());
+        if (updatedIncident.getTitle() != null) {
+            existingIncident.setTitle(updatedIncident.getTitle());
+        }
+        if (updatedIncident.getDescription() != null) {
+            existingIncident.setDescription(updatedIncident.getDescription());
+        }
+        if (updatedIncident.getLocation() != null) {
+            existingIncident.setLocation(updatedIncident.getLocation());
+        }
         existingIncident.setSeverity(updatedIncident.getSeverity());
-        existingIncident.setStatus(updatedIncident.getStatus());
+        if (updatedIncident.getStatus() != null) {
+            existingIncident.setStatus(updatedIncident.getStatus());
+        }
 
         incidentStorage.put(accidentId, existingIncident);
     }
 
-    // 获取所有事件（可按条件筛选）
-    public List<Incident> getAllIncidents(String status, Integer severity, int page, int limit) {
-        // 先筛选数据
+    public List<Incident> getAllIncidents(String status, Integer severity, int fromIndex, int toIndex) {
+        // 筛选符合条件的数据
         List<Incident> incidents = incidentStorage.values().stream()
                 .filter(incident -> (status == null || status.equals(incident.getStatus())) &&
                         (severity == null || severity.equals(incident.getSeverity())))
                 .collect(Collectors.toList());
 
-        // 计算总记录数和总页数
-        int totalRecords = incidents.size();
-        int totalPages = (int) Math.ceil((double) totalRecords / limit);
-
-        // 计算分页起始和结束位置
-        int start = page * limit;  // 根据当前页码和每页记录数计算起始索引
-        int end = Math.min(start + limit, totalRecords);  // 计算结束索引，防止越界
-
-        // 获取当前页的记录
-        List<Incident> pagedIncidents = incidents.subList(start, end);
+        // 确保 fromIndex 和 toIndex 的范围合法
+        if (fromIndex >= incidents.size()) {
+            return Collections.emptyList();  // 如果起始索引超出数据范围，返回空列表
+        }
+        toIndex = Math.min(toIndex, incidents.size());  // 确保结束索引不超出范围
 
         // 返回分页后的数据
-        return pagedIncidents;
+        return incidents.subList(fromIndex, toIndex);
     }
 
     // 获取事件总数

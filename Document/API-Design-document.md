@@ -133,9 +133,7 @@
         "description": "Detailed description 1",
         "location": "Location 1",
         "severity": 3,
-        "status": "Open",
-        "createdTime": "datetime",
-        "updatedTime": "datetime"
+        "status": "Open"
       },
       {
         "accidentId": 2,
@@ -143,9 +141,7 @@
         "description": "Detailed description 2",
         "location": "Location 2",
         "severity": 2,
-        "status": "Closed",
-        "createdTime": "datetime",
-        "updatedTime": "datetime"
+        "status": "Closed"
       }
     ],
     "pagination": {
